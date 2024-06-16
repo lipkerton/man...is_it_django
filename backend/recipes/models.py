@@ -1,7 +1,6 @@
 from django.db import models
+from django.conf import settings
 from django.core.validators import RegexValidator
-
-from users.models import User
 
 
 class Tag(models.Model):
@@ -37,6 +36,34 @@ class Ingredient(models.Model):
         verbose_name_plural = 'ингредиенты'
 
 
+class ShoppingCart(models.Model):
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    recipe = models.ForeignKey(
+        to='Recipe',
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
+
+class Favorite(models.Model):
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.CASCADE
+    )
+    recipe = models.ForeignKey(
+        to='Recipe',
+        null=True,
+        on_delete=models.CASCADE
+    )
+
+
 class RecipeIngredient(models.Model):
 
     recipe = models.ForeignKey(to='Recipe', on_delete=models.CASCADE)
@@ -59,7 +86,7 @@ class RecipeTag(models.Model):
 class Recipe(models.Model):
 
     author = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
     ingredients = models.ManyToManyField(
@@ -72,7 +99,7 @@ class Recipe(models.Model):
         through='RecipeTag',
         through_fields=('recipe', 'tag')
     )
-    image = models.ImageField()
+    image = models.ImageField(upload_to='recipe_pics/')
     name = models.CharField(max_length=255)
     text = models.TextField()
     cooking_time = models.SmallIntegerField()

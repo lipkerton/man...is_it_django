@@ -1,14 +1,17 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 
 
 class User(AbstractUser):
+
     avatar = models.ImageField(upload_to='user_pics/', null=True, blank=True)
     email = models.EmailField(max_length=254, unique=True, verbose_name='мыло')
     first_name = models.CharField(max_length=150, verbose_name='имя')
     last_name = models.CharField(max_length=150, verbose_name='фамилия')
     is_subscribed = models.BooleanField(default=False)
+    recipes_count = models.IntegerField(default=0)
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -18,4 +21,20 @@ class User(AbstractUser):
                 regex=r'^[\w.@+-]+\Z'
             ),
         ]
+    )
+
+
+class Subscription(models.Model):
+
+    subscriber = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='subscriber'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='user'
     )

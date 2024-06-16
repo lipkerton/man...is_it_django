@@ -3,15 +3,18 @@ from rest_framework import status, viewsets
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from django.http import Http404
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
 from .serializers import (
     CustomUserSerializer,
     CustomUserCreateSerializer,
     AuthTokenSerializer,
-    AvatarSerializer
+    AvatarSerializer,
+    SubscribeSerializer
 )
-from .models import User
+from .models import User, Subscription
 
 
 class CreateToken(APIView):
@@ -33,6 +36,36 @@ class DeleteToken(APIView):
     def post(self, request, *args, **kwargs):
         request.user.auth_token.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SubscriptionViewSet(viewsets.ModelViewSet):
+
+    queryset = Subscription.objects.all()
+    serializer_class = SubscribeSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get_object(self):
+
+        subscriber = self.request.user
+
+        try:
+            user = User.objects.get(
+                id=self.kwargs.get('pk')
+            )
+        except User.DoesNotExist:
+            raise Http404
+
+        try:
+            subscription = Subscription.objects.get(
+                user=user,
+                subscriber=subscriber
+            )
+        except Subscription.DoesNotExist:
+            raise ValidationError(
+                'Такой подписки не существует!'
+            )
+
+        return subscription
 
 
 class CustomUserViewSet(UserViewSet):

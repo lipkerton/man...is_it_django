@@ -1,6 +1,15 @@
+from django.http import Http404
 from rest_framework import serializers
 
-from .models import Tag, Ingredient, RecipeIngredient, RecipeTag, Recipe
+from .models import (
+    Tag,
+    Ingredient,
+    RecipeIngredient,
+    RecipeTag,
+    Recipe,
+    ShoppingCart,
+    Favorite
+)
 from users.serializers import CustomUserSerializer, Base64ImageField
 
 
@@ -65,8 +74,8 @@ class RecipeCSerializer(serializers.ModelSerializer):
         many=True,
         source='recipe_tag'
     )
-    is_favorited = serializers.BooleanField(read_only=True)
-    is_in_shopping_cart = serializers.BooleanField(read_only=True)
+    is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -76,6 +85,40 @@ class RecipeCSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name',
             'image', 'text', 'cooking_time'
         )
+    
+    def get_is_favorited(self, attrs):
+
+        user = self.context.get('request').user
+
+        try:
+            favorite_list = Favorite.objects.get(
+                user=user,
+                recipe=attrs
+            )
+        except Favorite.DoesNotExist:
+            return False
+
+        except TypeError:
+            return False
+
+        return favorite_list.recipe.is_favorited
+
+    def get_is_in_shopping_cart(self, attrs):
+
+        user = self.context.get('request').user
+
+        try:
+            shopping_list = ShoppingCart.objects.get(
+                user=user,
+                recipe=attrs
+            )
+        except ShoppingCart.DoesNotExist:
+            return False
+
+        except TypeError:
+            return False
+
+        return shopping_list.recipe.is_in_shopping_cart
 
     def tag_ingredient_create(self, ingredients, tags, recipe):
 
@@ -166,3 +209,110 @@ class RecipeCSerializer(serializers.ModelSerializer):
             )
 
         return super().validate(attrs)
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+
+    id = serializers.IntegerField(
+        source='recipe.id',
+        read_only=True
+    )
+    name = serializers.CharField(
+        source='recipe.name',
+        read_only=True
+    )
+    image = serializers.ImageField(
+        source='recipe.image',
+        read_only=True
+    )
+    cooking_time = serializers.IntegerField(
+        source='recipe.cooking_time',
+        read_only=True
+    )
+
+    class Meta:
+        model = ShoppingCart
+        fields = (
+            'id', 'name', 'image', 'cooking_time'
+        )
+
+    def create(self, validated_data):
+
+        user = self.context.get('request').user
+        recipe = Recipe.objects.get(
+            id=self.context.get('view').kwargs.get('pk')
+        )
+
+        shopping_cart = ShoppingCart.objects.create(
+            user=user,
+            recipe=recipe
+        )
+
+        return shopping_cart
+
+    def validate(self, attrs):
+
+        user = self.context.get('request').user
+
+        try:
+            recipe = Recipe.objects.get(
+                id=self.context.get('view').kwargs.get('pk')
+            )
+        except Recipe.DoesNotExist:
+            raise serializers.ValidationError(
+                'Такого рецепта не существует!'
+            )
+
+        shopping_cart = ShoppingCart.objects.filter(
+            user=user,
+            recipe=recipe
+        ).count()
+
+        if shopping_cart > 0:
+            raise serializers.ValidationError(
+                'Такая покупка в корзине уже есть!'
+            )
+
+        return attrs
+
+
+class FavoriteSerializer(ShoppingCartSerializer):
+
+    def create(self, validated_data):
+
+        user = self.context.get('request').user
+        recipe = Recipe.objects.get(
+            id=self.context.get('view').kwargs.get('pk')
+        )
+
+        favorites = Favorite.objects.create(
+            user=user,
+            recipe=recipe
+        )
+
+        return favorites
+
+    def validate(self, attrs):
+
+        user = self.context.get('request').user
+
+        try:
+            recipe = Recipe.objects.get(
+                id=self.context.get('view').kwargs.get('pk')
+            )
+        except Recipe.DoesNotExist:
+            raise serializers.ValidationError(
+                'Такого рецепта не существует!'
+            )
+
+        favorites = Favorite.objects.filter(
+            user=user,
+            recipe=recipe
+        ).count()
+
+        if favorites > 0:
+            raise serializers.ValidationError(
+                'Этот рецепт уже в списке избранного!'
+            )
+
+        return attrs
