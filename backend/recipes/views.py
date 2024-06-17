@@ -1,21 +1,16 @@
-from rest_framework import viewsets
+from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import ValidationError
-from django.http import Http404
+from rest_framework.response import Response
+from urlshortner.utils import shorten_url
 
-from .models import (
-    Tag, Ingredient, Recipe, ShoppingCart, Favorite,
-)
-from users.models import User
-from .serializers import (
-    TagSerializer,
-    IngredientSerializer,
-    RecipeCSerializer,
-    ShoppingCartSerializer,
-    FavoriteSerializer
-)
+from .methods import get_cart_fav, random_naming_method
+from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .permissions import IsAuthorOrReadOnly
+from .serializers import (FavoriteSerializer, IngredientSerializer,
+                          RecipeCSerializer, ShoppingCartSerializer,
+                          TagSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -30,6 +25,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
+    filter_backends = (DjangoFilterBackend, )
+    filterset_fields = ('name',)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -38,6 +35,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeCSerializer
     permission_classes = (IsAuthorOrReadOnly, )
     filter_backends = (DjangoFilterBackend, )
+    filterset_fields = (
+        'is_favorited',
+        'author',
+        'is_in_shopping_cart',
+        'tags'
+    )
+
+    def get_link(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        main_part = 'http://localhost:8000/recipes/'
+        mini_link = shorten_url(
+            f'{main_part}{pk}',
+            is_permanent=False
+        )
+        return Response(
+            {'short-link': f'{main_part}s/{mini_link}'}
+        )
 
 
 class ShopCartViewSet(viewsets.ModelViewSet):
@@ -47,26 +61,30 @@ class ShopCartViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, )
 
     def get_object(self):
-        user = self.request.user
+        return get_cart_fav(
+            ype=Recipe,
+            data=self,
+            add_ype=ShoppingCart,
+            place='корзина'
+        )
 
-        try:
-            recipe = Recipe.objects.get(
-                id=self.kwargs.get('pk')
-            )
-        except Recipe.DoesNotExist:
-            raise Http404
+    def download(self, request, name):
 
-        try:
-            shopping_cart = ShoppingCart.objects.get(
-                user=user,
-                recipe=recipe
-            )
-        except ShoppingCart.DoesNotExist:
-            raise ValidationError(
-                'Такого товара в корзине нет!'
-            )
+        return FileResponse(f'./files/{name}', as_attachment=True)
 
-        return shopping_cart
+    def write_file_name(self, request):
+        package = ShoppingCart.objects.filter(
+            user=request.user
+        )
+        rnd_file_name = random_naming_method()
+        with open(f'./files{rnd_file_name}', 'w') as dwnl:
+            for pack in package:
+                dwnl.write(
+                    f'Ваша покупка - {pack.name}, ',
+                    f'Время приготовления - {pack.cooking_time}.'
+                    '\n'
+                )
+        return self.download(name=rnd_file_name)
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
@@ -76,23 +94,9 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, )
 
     def get_object(self):
-        user = self.request.user
-
-        try:
-            recipe = Recipe.objects.get(
-                id=self.kwargs.get('pk')
-            )
-        except Recipe.DoesNotExist:
-            raise Http404
-
-        try:
-            shopping_cart = Favorite.objects.get(
-                user=user,
-                recipe=recipe
-            )
-        except Favorite.DoesNotExist:
-            raise ValidationError(
-                'Такого товара в избранном нет!'
-            )
-
-        return shopping_cart
+        return get_cart_fav(
+            ype=Recipe,
+            data=self,
+            add_ype=Favorite,
+            place='избранное'
+        )

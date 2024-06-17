@@ -6,12 +6,24 @@ from django.core.validators import RegexValidator
 
 class User(AbstractUser):
 
-    avatar = models.ImageField(upload_to='user_pics/', null=True, blank=True)
-    email = models.EmailField(max_length=254, unique=True, verbose_name='мыло')
-    first_name = models.CharField(max_length=150, verbose_name='имя')
-    last_name = models.CharField(max_length=150, verbose_name='фамилия')
-    is_subscribed = models.BooleanField(default=False)
-    recipes_count = models.IntegerField(default=0)
+    avatar = models.ImageField(
+        upload_to='user_pics/', null=True, blank=True
+    )
+    email = models.EmailField(
+        max_length=254, unique=True, verbose_name='мыло'
+    )
+    first_name = models.CharField(
+        max_length=150, verbose_name='имя'
+    )
+    last_name = models.CharField(
+        max_length=150, verbose_name='фамилия'
+    )
+    is_subscribed = models.BooleanField(
+        default=False, verbose_name='подписан'
+    )
+    recipes_count = models.IntegerField(
+        default=0, verbose_name='количество рецептов'
+    )
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -22,6 +34,10 @@ class User(AbstractUser):
             ),
         ]
     )
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'пользователи'
 
 
 class Subscription(models.Model):

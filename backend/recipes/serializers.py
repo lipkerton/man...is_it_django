@@ -1,16 +1,9 @@
-from django.http import Http404
 from rest_framework import serializers
+from users.serializers import Base64ImageField, CustomUserSerializer
 
-from .models import (
-    Tag,
-    Ingredient,
-    RecipeIngredient,
-    RecipeTag,
-    Recipe,
-    ShoppingCart,
-    Favorite
-)
-from users.serializers import CustomUserSerializer, Base64ImageField
+from .methods import get_bool_cart_fav, validate_fav_cart
+from .models import (Favorite, Ingredient, Recipe, RecipeIngredient, RecipeTag,
+                     ShoppingCart, Tag)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -85,40 +78,30 @@ class RecipeCSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name',
             'image', 'text', 'cooking_time'
         )
-    
+
     def get_is_favorited(self, attrs):
 
-        user = self.context.get('request').user
+        result = get_bool_cart_fav(
+            ype=Favorite,
+            data=self,
+            attrs=attrs
+        )
 
-        try:
-            favorite_list = Favorite.objects.get(
-                user=user,
-                recipe=attrs
-            )
-        except Favorite.DoesNotExist:
-            return False
-
-        except TypeError:
-            return False
-
-        return favorite_list.recipe.is_favorited
+        if result:
+            return result.is_favorited
+        return result
 
     def get_is_in_shopping_cart(self, attrs):
 
-        user = self.context.get('request').user
+        result = get_bool_cart_fav(
+            ype=ShoppingCart,
+            data=self,
+            attrs=attrs
+        )
 
-        try:
-            shopping_list = ShoppingCart.objects.get(
-                user=user,
-                recipe=attrs
-            )
-        except ShoppingCart.DoesNotExist:
-            return False
-
-        except TypeError:
-            return False
-
-        return shopping_list.recipe.is_in_shopping_cart
+        if result:
+            return result.is_in_shopping_cart
+        return result
 
     def tag_ingredient_create(self, ingredients, tags, recipe):
 
@@ -252,28 +235,13 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
 
-        user = self.context.get('request').user
-
-        try:
-            recipe = Recipe.objects.get(
-                id=self.context.get('view').kwargs.get('pk')
-            )
-        except Recipe.DoesNotExist:
-            raise serializers.ValidationError(
-                'Такого рецепта не существует!'
-            )
-
-        shopping_cart = ShoppingCart.objects.filter(
-            user=user,
-            recipe=recipe
-        ).count()
-
-        if shopping_cart > 0:
-            raise serializers.ValidationError(
-                'Такая покупка в корзине уже есть!'
-            )
-
-        return attrs
+        return validate_fav_cart(
+            ype=Recipe,
+            data=self,
+            add_ype=ShoppingCart,
+            place='корзине',
+            attrs=attrs
+        )
 
 
 class FavoriteSerializer(ShoppingCartSerializer):
@@ -294,25 +262,10 @@ class FavoriteSerializer(ShoppingCartSerializer):
 
     def validate(self, attrs):
 
-        user = self.context.get('request').user
-
-        try:
-            recipe = Recipe.objects.get(
-                id=self.context.get('view').kwargs.get('pk')
-            )
-        except Recipe.DoesNotExist:
-            raise serializers.ValidationError(
-                'Такого рецепта не существует!'
-            )
-
-        favorites = Favorite.objects.filter(
-            user=user,
-            recipe=recipe
-        ).count()
-
-        if favorites > 0:
-            raise serializers.ValidationError(
-                'Этот рецепт уже в списке избранного!'
-            )
-
-        return attrs
+        return validate_fav_cart(
+            ype=Recipe,
+            data=self,
+            add_ype=Favorite,
+            place='избранном',
+            attrs=attrs
+        )

@@ -1,21 +1,11 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 
-from users.views import (
-    CreateToken,
-    DeleteToken,
-    AvatarViewSet,
-    CustomUserViewSet,
-    SubscriptionViewSet
-)
-from recipes.views import (
-    TagViewSet,
-    IngredientViewSet,
-    RecipeViewSet,
-    ShopCartViewSet,
-    FavoriteViewSet
-)
+from users.views import (AvatarViewSet, CreateToken, CustomUserViewSet,
+                         DeleteToken, SubscriptionViewSet)
+from recipes.views import (FavoriteViewSet, IngredientViewSet, RecipeViewSet,
+                           ShopCartViewSet, TagViewSet)
 
 router = SimpleRouter()
 
@@ -42,6 +32,10 @@ core_patterns = [
     path('recipes/<int:pk>/favorite/', FavoriteViewSet.as_view(
         {'post': 'create', 'delete': 'destroy'}
     )),
+    path('recipes/<int:pk>/get-link/', RecipeViewSet.as_view(
+        {'get': 'get_link'}
+    )),
+    path('s/', include("urlshortner.urls")),
     path('', include(router.urls)),
 ]
 

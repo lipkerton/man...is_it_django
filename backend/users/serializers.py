@@ -1,13 +1,12 @@
 import base64
-from rest_framework import status
-from rest_framework.response import Response
+
 from django.core.files.base import ContentFile
 from django.http import Http404
-from djoser.serializers import UserSerializer, UserCreateSerializer
+from djoser.serializers import UserCreateSerializer, UserSerializer
+from recipes.models import Recipe
 from rest_framework import serializers
 
-from .models import User, Subscription
-from recipes.models import Recipe
+from .models import Subscription, User
 
 
 class Base64ImageField(serializers.ImageField):

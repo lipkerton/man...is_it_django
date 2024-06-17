@@ -1,20 +1,17 @@
+from django.http import Http404
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
-from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
-from django.http import Http404
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from .serializers import (
-    CustomUserSerializer,
-    CustomUserCreateSerializer,
-    AuthTokenSerializer,
-    AvatarSerializer,
-    SubscribeSerializer
-)
-from .models import User, Subscription
+from .models import Subscription, User
+from .pagination import CustomPagination
+from .serializers import (AuthTokenSerializer, AvatarSerializer,
+                          CustomUserCreateSerializer, CustomUserSerializer,
+                          SubscribeSerializer)
 
 
 class CreateToken(APIView):
@@ -43,6 +40,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscribeSerializer
     permission_classes = (IsAuthenticated, )
+    pagination_class = CustomPagination
 
     def get_object(self):
 
