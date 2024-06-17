@@ -29,6 +29,9 @@ core_patterns = [
     path('recipes/<int:pk>/shopping_cart/', ShopCartViewSet.as_view(
         {'post': 'create', 'delete': 'destroy'}
     )),
+    path('recipes/download_shopping_cart', ShopCartViewSet.as_view(
+        {'get': 'write_file_name'}
+    )),
     path('recipes/<int:pk>/favorite/', FavoriteViewSet.as_view(
         {'post': 'create', 'delete': 'destroy'}
     )),
