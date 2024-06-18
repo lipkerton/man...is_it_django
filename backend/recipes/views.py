@@ -39,7 +39,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         'is_favorited',
         'author',
         'is_in_shopping_cart',
-        'tags'
+        'tags__slug'
     )
 
     def get_link(self, request, *args, **kwargs):
@@ -79,10 +79,13 @@ class ShopCartViewSet(viewsets.ModelViewSet):
         rnd_file_name = random_naming_method()
         with open(f'./files{rnd_file_name}', 'w') as dwnl:
             for pack in package:
-                dwnl.write(
-                    f'Ваша покупка - {pack.name}, ',
-                    f'Время приготовления - {pack.cooking_time}.'
+                message = (
+                    f'Ваша покупка - {pack.recipe.name}, ',
+                    f'Время приготовления - {pack.recipe.cooking_time}.',
                     '\n'
+                )
+                dwnl.write(
+                    message
                 )
         return self.download(name=rnd_file_name)
 

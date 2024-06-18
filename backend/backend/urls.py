@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 
@@ -29,7 +31,7 @@ core_patterns = [
     path('recipes/<int:pk>/shopping_cart/', ShopCartViewSet.as_view(
         {'post': 'create', 'delete': 'destroy'}
     )),
-    path('recipes/download_shopping_cart', ShopCartViewSet.as_view(
+    path('recipes/download_shopping_cart/', ShopCartViewSet.as_view(
         {'get': 'write_file_name'}
     )),
     path('recipes/<int:pk>/favorite/', FavoriteViewSet.as_view(
@@ -45,4 +47,4 @@ core_patterns = [
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(core_patterns)),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

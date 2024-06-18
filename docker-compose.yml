@@ -3,6 +3,7 @@ version: '3'
 volumes:
   pg_data:
   static:
+  media:
 
 services:
   db:
@@ -30,3 +31,4 @@ services:
       - 8090:90
     volumes:
       - static:/staticfiles/
+      - media:/media/recipes/

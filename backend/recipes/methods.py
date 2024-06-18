@@ -1,4 +1,5 @@
 import random
+import string
 
 from django.http import Http404
 from rest_framework import serializers
@@ -74,12 +75,12 @@ def get_bool_cart_fav(ype, data, attrs):
 
 
 def random_naming_method():
+    numbers_letters = string.ascii_letters + string.digits
     return ''.join(
         [
             random.choice(
                 list(
-                    '123456789qwertyuiopasdfghjklzx',
-                    'cvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
+                    numbers_letters
                 )
             ) for x in range(12)
         ]
