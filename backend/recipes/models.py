@@ -53,6 +53,9 @@ class ShoppingCart(models.Model):
         verbose_name='Рецепт'
     )
 
+    class Meta:
+        unique_together = ('recipe', 'user')
+
 
 class Favorite(models.Model):
 
@@ -68,6 +71,9 @@ class Favorite(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Рецепт'
     )
+
+    class Meta:
+        unique_together = ('recipe', 'user')
 
 
 class RecipeIngredient(models.Model):
@@ -86,6 +92,7 @@ class RecipeIngredient(models.Model):
 
     class Meta:
         default_related_name = 'recipe_ingredient'
+        unique_together = ('recipe', 'ingredient')
 
 
 class RecipeTag(models.Model):
@@ -95,16 +102,7 @@ class RecipeTag(models.Model):
 
     class Meta:
         default_related_name = 'recipe_tag'
-
-
-class Files(models.Model):
-
-    aticle = models.ForeignKey(
-        ShoppingCart,
-        on_delete=models.CASCADE,
-        related_name='cart_dwnl'
-    )
-    file = models.FileField(upload_to='files/')
+        unique_together = ('recipe', 'tag')
 
 
 class Recipe(models.Model):
@@ -139,14 +137,6 @@ class Recipe(models.Model):
     )
     cooking_time = models.SmallIntegerField(
         verbose_name='Время готовки'
-    )
-    is_favorited = models.BooleanField(
-        default=False,
-        verbose_name='Зафоловленный'
-    )
-    is_in_shopping_cart = models.BooleanField(
-        default=False,
-        verbose_name='Лежит ли в корзине покупок'
     )
 
     class Meta:

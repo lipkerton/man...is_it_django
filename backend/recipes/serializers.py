@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from users.serializers import Base64ImageField, CustomUserSerializer
 
+from users.serializers import CustomUserSerializer
+from users.fields import Base64ImageField
 from .methods import get_bool_cart_fav, validate_fav_cart
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient, RecipeTag,
                      ShoppingCart, Tag)
@@ -20,6 +21,44 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit')
 
 
+class RecipeIngredientRepSerializer(serializers.ModelSerializer):
+
+    id = serializers.IntegerField(
+        source='ingredient.id'
+    )
+    name = serializers.CharField(
+        source='ingredient.name'
+    )
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit'
+    )
+
+    class Meta:
+        model = RecipeIngredient
+        fields = (
+            'id', 'name', 'measurement_unit', 'amount'
+        )
+
+
+class RecipeTagRepSerializer(serializers.ModelSerializer):
+
+    id = serializers.IntegerField(
+        source='tag.id'
+    )
+    name = serializers.CharField(
+        source='tag.name'
+    )
+    slug = serializers.SlugField(
+        source='tag.slug'
+    )
+
+    class Meta:
+        model = RecipeTag
+        fields = (
+            'id', 'name', 'slug'
+        )
+
+
 class RecipeIngredientSerializer(serializers.ModelSerializer):
 
     id = serializers.PrimaryKeyRelatedField(
@@ -36,22 +75,19 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount')
 
     def to_representation(self, instance):
-        return {
-            "id": instance.ingredient.id,
-            "name": instance.ingredient.name,
-            "measurement_unit": instance.ingredient.measurement_unit,
-            "amount": instance.amount
-        }
+        serializer = RecipeIngredientRepSerializer(
+            instance=instance
+        )
+        return serializer.data
 
 
 class RecipeTagField(serializers.PrimaryKeyRelatedField):
 
     def to_representation(self, instance):
-        return {
-            'id': instance.tag.id,
-            'name': instance.tag.name,
-            'slug': instance.tag.slug
-        }
+        serializer = RecipeTagRepSerializer(
+            instance=instance
+        )
+        return serializer.data
 
 
 class RecipeCSerializer(serializers.ModelSerializer):
@@ -82,41 +118,44 @@ class RecipeCSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, attrs):
 
         result = get_bool_cart_fav(
-            ype=Favorite,
+            cart_fav_obj=Favorite,
             data=self,
             attrs=attrs
         )
 
         if result:
-            return result.is_favorited
+            return True
         return result
 
     def get_is_in_shopping_cart(self, attrs):
 
         result = get_bool_cart_fav(
-            ype=ShoppingCart,
+            cart_fav_obj=ShoppingCart,
             data=self,
             attrs=attrs
         )
 
         if result:
-            return result.is_in_shopping_cart
+            return True
         return result
 
     def tag_ingredient_create(self, ingredients, tags, recipe):
 
-        for ingredient in ingredients:
-            RecipeIngredient.objects.create(
+        ingredients_obj = [
+            RecipeIngredient(
                 recipe=recipe,
                 amount=ingredient.get('amount'),
                 ingredient=ingredient.get('id'),
-            )
-
-        for tag in tags:
-            RecipeTag.objects.create(
+            ) for ingredient in ingredients
+        ]
+        tags_obj = [
+            RecipeTag(
                 recipe=recipe,
                 tag=tag
-            )
+            ) for tag in tags
+        ]
+        RecipeIngredient.objects.bulk_create(ingredients_obj)
+        RecipeTag.objects.bulk_create(tags_obj)
 
     def create(self, validated_data, **kwargs):
 
@@ -236,9 +275,9 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
 
         return validate_fav_cart(
-            ype=Recipe,
+            recipe_obj=Recipe,
             data=self,
-            add_ype=ShoppingCart,
+            cart_fav_obj=ShoppingCart,
             place='корзине',
             attrs=attrs
         )
@@ -263,9 +302,9 @@ class FavoriteSerializer(ShoppingCartSerializer):
     def validate(self, attrs):
 
         return validate_fav_cart(
-            ype=Recipe,
+            recipe_obj=Recipe,
             data=self,
-            add_ype=Favorite,
+            cart_fav_obj=Favorite,
             place='избранном',
             attrs=attrs
         )

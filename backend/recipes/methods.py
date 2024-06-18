@@ -6,23 +6,23 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 
-def get_cart_fav(ype, data, add_ype, place):
+def get_cart_fav(recipe_obj, data, cart_fav_obj, place):
 
     user = data.request.user
 
     try:
-        recipe = ype.objects.get(
+        recipe = recipe_obj.objects.get(
             id=data.kwargs.get('pk')
         )
-    except ype.DoesNotExist:
+    except recipe_obj.DoesNotExist:
         raise Http404
 
     try:
-        obj = add_ype.objects.get(
+        obj = cart_fav_obj.objects.get(
             user=user,
             recipe=recipe
         )
-    except add_ype.DoesNotExist:
+    except cart_fav_obj.DoesNotExist:
         raise ValidationError(
             f'Такого товара в {place} нет!'
         )
@@ -30,25 +30,25 @@ def get_cart_fav(ype, data, add_ype, place):
     return obj
 
 
-def validate_fav_cart(ype, data, add_ype, place, attrs):
+def validate_fav_cart(recipe_obj, data, cart_fav_obj, place, attrs):
 
     user = data.context.get('request').user
 
     try:
-        recipe = ype.objects.get(
+        recipe = recipe_obj.objects.get(
             id=data.context.get('view').kwargs.get('pk')
         )
-    except ype.DoesNotExist:
+    except recipe_obj.DoesNotExist:
         raise serializers.ValidationError(
             'Такого рецепта не существует!'
         )
 
-    obj_counter = add_ype.objects.filter(
+    obj_existence = cart_fav_obj.objects.filter(
         user=user,
         recipe=recipe
-    ).count()
+    ).exists()
 
-    if obj_counter > 0:
+    if obj_existence:
         raise serializers.ValidationError(
             f'Этот рецепт уже в {place}!'
         )
@@ -56,16 +56,16 @@ def validate_fav_cart(ype, data, add_ype, place, attrs):
     return attrs
 
 
-def get_bool_cart_fav(ype, data, attrs):
+def get_bool_cart_fav(cart_fav_obj, data, attrs):
 
     user = data.context.get('request').user
 
     try:
-        obj = ype.objects.get(
+        obj = cart_fav_obj.objects.get(
             user=user,
             recipe=attrs
         )
-    except ype.DoesNotExist:
+    except cart_fav_obj.DoesNotExist:
         return False
 
     except TypeError:

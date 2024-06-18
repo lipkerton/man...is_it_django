@@ -1,4 +1,4 @@
-from django.http import FileResponse
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from urlshortner.utils import shorten_url
 
 from .methods import get_cart_fav, random_naming_method
+from .filters import CustomFilter
 from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
@@ -35,22 +36,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeCSerializer
     permission_classes = (IsAuthorOrReadOnly, )
     filter_backends = (DjangoFilterBackend, )
-    filterset_fields = (
-        'is_favorited',
-        'author',
-        'is_in_shopping_cart',
-        'tags__slug'
-    )
+    filterset_class = CustomFilter
 
     def get_link(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
-        main_part = 'http://localhost:8000/recipes/'
+        main_part = request._request._current_scheme_host
+        new_link = f'recipes/{pk}'
         mini_link = shorten_url(
-            f'{main_part}{pk}',
+            f'{main_part}{new_link}',
             is_permanent=False
         )
         return Response(
-            {'short-link': f'{main_part}s/{mini_link}'}
+            {'short-link': f'{main_part}/s/{mini_link}'}
         )
 
 
@@ -62,32 +59,31 @@ class ShopCartViewSet(viewsets.ModelViewSet):
 
     def get_object(self):
         return get_cart_fav(
-            ype=Recipe,
+            recipe_obj=Recipe,
             data=self,
-            add_ype=ShoppingCart,
+            cart_fav_obj=ShoppingCart,
             place='корзина'
         )
 
-    def download(self, request, name):
-
-        return FileResponse(f'./files/{name}', as_attachment=True)
-
-    def write_file_name(self, request):
+    def download(self, request):
         package = ShoppingCart.objects.filter(
             user=request.user
         )
-        rnd_file_name = random_naming_method()
-        with open(f'./files{rnd_file_name}', 'w') as dwnl:
-            for pack in package:
-                message = (
-                    f'Ваша покупка - {pack.recipe.name}, ',
-                    f'Время приготовления - {pack.recipe.cooking_time}.',
-                    '\n'
-                )
-                dwnl.write(
-                    message
-                )
-        return self.download(name=rnd_file_name)
+        filename = random_naming_method()
+        messages = list()
+        for pack in package:
+            message = (
+                f'Ваша покупка - {pack.recipe.name}, ',
+                f'Время приготовления - {pack.recipe.cooking_time}.',
+                '\n'
+            )
+            messages.append(message)
+        response_content = '\n'.join(messages)
+        response = HttpResponse(
+            response_content, content_type='text/plain,charset=utf8'
+        )
+        response['Content-Disposition'] = f'attachment; filename={filename}'
+        return response
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
@@ -98,8 +94,8 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
     def get_object(self):
         return get_cart_fav(
-            ype=Recipe,
+            recipe_obj=Recipe,
             data=self,
-            add_ype=Favorite,
+            cart_fav_obj=Favorite,
             place='избранное'
         )

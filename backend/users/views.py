@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.pagination import LimitOffsetPagination
 
 from .models import Subscription, User
 from .pagination import CustomPagination
@@ -40,7 +41,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscribeSerializer
     permission_classes = (IsAuthenticated, )
-    pagination_class = CustomPagination
+    pagination_class = LimitOffsetPagination
 
     def get_object(self):
 

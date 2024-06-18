@@ -1,24 +1,11 @@
-import base64
-
-from django.core.files.base import ContentFile
 from django.http import Http404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from recipes.models import Recipe
 from rest_framework import serializers
 
 from .models import Subscription, User
-
-
-class Base64ImageField(serializers.ImageField):
-
-    def to_internal_value(self, data):
-
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
-        return super().to_internal_value(data)
+from .fields import Base64ImageField
+from .pagination import CustomPagination
 
 
 class AvatarSerializer(serializers.ModelSerializer):
@@ -64,6 +51,18 @@ class CustomUserSerializer(UserSerializer):
         )
 
 
+class RecipesProfileSerializer(serializers.ModelSerializer):
+
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    image = Base64ImageField()
+    cooking_time = serializers.IntegerField()
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
 class SubscribeSerializer(serializers.ModelSerializer):
 
     email = serializers.EmailField(
@@ -103,16 +102,14 @@ class SubscribeSerializer(serializers.ModelSerializer):
     def get_recipes(self, attrs):
 
         recipes = Recipe.objects.filter(author=attrs.user)
-        instance = [
-            {
-                'id': data.id,
-                'name': data.name,
-                'image': data.image.url,
-                'cooking_time': data.cooking_time
-            } for data in recipes
-        ]
-
-        return instance
+        paginator = CustomPagination()
+        result = paginator.paginate_queryset(
+            recipes, self.context.get('request')
+        )
+        serializer = RecipesProfileSerializer(
+            result, many=True, context={'request': self.context.get('request')}
+        )
+        return serializer.data
 
     def get_recipes_count(self, attrs):
         return Recipe.objects.filter(author=attrs.user).count()
@@ -145,14 +142,14 @@ class SubscribeSerializer(serializers.ModelSerializer):
         subscription = Subscription.objects.filter(
             user=user,
             subscriber=subscriber
-        ).count()
+        ).exists()
 
         if subscriber == user:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя!'
             )
 
-        if subscription > 0:
+        if subscription:
             raise serializers.ValidationError(
                 'Такая подписка уже существует'
             )
