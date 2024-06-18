@@ -9,7 +9,6 @@ from rest_framework.views import APIView
 from rest_framework.pagination import LimitOffsetPagination
 
 from .models import Subscription, User
-from .pagination import CustomPagination
 from .serializers import (AuthTokenSerializer, AvatarSerializer,
                           CustomUserCreateSerializer, CustomUserSerializer,
                           SubscribeSerializer)

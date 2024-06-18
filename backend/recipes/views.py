@@ -90,7 +90,7 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
     queryset = Favorite
     serializer_class = FavoriteSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthorOrReadOnly, )
 
     def get_object(self):
         return get_cart_fav(

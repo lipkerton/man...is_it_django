@@ -23,7 +23,7 @@ urlpatterns = [
         {'post': 'create', 'delete': 'destroy'}
     )),
     path('recipes/download_shopping_cart/', ShopCartViewSet.as_view(
-        {'get': 'write_file_name'}
+        {'get': 'download'}
     )),
     path('recipes/<int:pk>/favorite/', FavoriteViewSet.as_view(
         {'post': 'create', 'delete': 'destroy'}
