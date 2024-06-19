@@ -9,13 +9,13 @@ class CustomFilter(rest_framework.FilterSet):
         field_name='tags__slug'
     )
     is_in_shopping_cart = rest_framework.BooleanFilter(
-        method='f_is_in_shopping_cart'
+        method='filter_is_in_shopping_cart'
     )
     is_favorited = rest_framework.BooleanFilter(
-        method='f_is_favorite'
+        method='filter_is_favorite'
     )
 
-    def f_is_in_shopping_cart(self, queryset, name, value):
+    def filter_is_in_shopping_cart(self, queryset, name, value):
         if (
             self.request.user.is_authenticated
             and value
@@ -34,7 +34,7 @@ class CustomFilter(rest_framework.FilterSet):
             return queryset.exclude(id_in=shop_cart)
         return queryset
 
-    def f_is_favorite(self, queryset, name, value):
+    def filter_is_favorite(self, queryset, name, value):
 
         if (
             self.request.user.is_authenticated

@@ -54,7 +54,7 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
-        unique_together = ('recipe', 'user')
+        unique_together = [['recipe', 'user']]
 
 
 class Favorite(models.Model):
@@ -73,7 +73,7 @@ class Favorite(models.Model):
     )
 
     class Meta:
-        unique_together = ('recipe', 'user')
+        unique_together = [['recipe', 'user']]
 
 
 class RecipeIngredient(models.Model):
@@ -92,7 +92,7 @@ class RecipeIngredient(models.Model):
 
     class Meta:
         default_related_name = 'recipe_ingredient'
-        unique_together = ('recipe', 'ingredient')
+        unique_together = [['recipe', 'ingredient']]
 
 
 class RecipeTag(models.Model):
@@ -102,7 +102,7 @@ class RecipeTag(models.Model):
 
     class Meta:
         default_related_name = 'recipe_tag'
-        unique_together = ('recipe', 'tag')
+        unique_together = [['recipe', 'tag']]
 
 
 class Recipe(models.Model):

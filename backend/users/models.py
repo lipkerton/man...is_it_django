@@ -56,4 +56,4 @@ class Subscription(models.Model):
     )
 
     class Meta:
-        unique_together = ('subscriber', 'user')
+        unique_together = [['subscriber', 'user']]

@@ -1,8 +1,9 @@
 from rest_framework import serializers
-
 from users.fields import Base64ImageField
 from users.serializers import CustomUserSerializer
-from .methods import get_bool_cart_fav, validate_fav_cart
+
+from .methods import (get_bool_shopping_cart_favorite,
+                      validate_shopping_cart_favorite)
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient, RecipeTag,
                      ShoppingCart, Tag)
 
@@ -117,8 +118,8 @@ class RecipeCSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, attrs):
 
-        result = get_bool_cart_fav(
-            cart_fav_obj=Favorite,
+        result = get_bool_shopping_cart_favorite(
+            shopping_cart_favorite_obj=Favorite,
             data=self,
             attrs=attrs
         )
@@ -129,8 +130,8 @@ class RecipeCSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, attrs):
 
-        result = get_bool_cart_fav(
-            cart_fav_obj=ShoppingCart,
+        result = get_bool_shopping_cart_favorite(
+            shopping_cart_favorite_obj=ShoppingCart,
             data=self,
             attrs=attrs
         )
@@ -274,10 +275,10 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
 
-        return validate_fav_cart(
+        return validate_shopping_cart_favorite(
             recipe_obj=Recipe,
             data=self,
-            cart_fav_obj=ShoppingCart,
+            shopping_cart_favorite_obj=ShoppingCart,
             place='корзине',
             attrs=attrs
         )
@@ -301,10 +302,10 @@ class FavoriteSerializer(ShoppingCartSerializer):
 
     def validate(self, attrs):
 
-        return validate_fav_cart(
+        return validate_shopping_cart_favorite(
             recipe_obj=Recipe,
             data=self,
-            cart_fav_obj=Favorite,
+            shopping_cart_favorite_obj=Favorite,
             place='избранном',
             attrs=attrs
         )

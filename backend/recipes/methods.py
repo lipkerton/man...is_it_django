@@ -6,7 +6,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 
-def get_cart_fav(recipe_obj, data, cart_fav_obj, place):
+def get_shopping_cart_favorite_obj(
+        recipe_obj, data, shopping_cart_favorite_obj, place
+):
 
     user = data.request.user
 
@@ -18,11 +20,11 @@ def get_cart_fav(recipe_obj, data, cart_fav_obj, place):
         raise Http404
 
     try:
-        obj = cart_fav_obj.objects.get(
+        obj = shopping_cart_favorite_obj.objects.get(
             user=user,
             recipe=recipe
         )
-    except cart_fav_obj.DoesNotExist:
+    except shopping_cart_favorite_obj.DoesNotExist:
         raise ValidationError(
             f'Такого товара в {place} нет!'
         )
@@ -30,7 +32,9 @@ def get_cart_fav(recipe_obj, data, cart_fav_obj, place):
     return obj
 
 
-def validate_fav_cart(recipe_obj, data, cart_fav_obj, place, attrs):
+def validate_shopping_cart_favorite(
+        recipe_obj, data, shopping_cart_favorite_obj, place, attrs
+):
 
     user = data.context.get('request').user
 
@@ -43,7 +47,7 @@ def validate_fav_cart(recipe_obj, data, cart_fav_obj, place, attrs):
             'Такого рецепта не существует!'
         )
 
-    obj_existence = cart_fav_obj.objects.filter(
+    obj_existence = shopping_cart_favorite_obj.objects.filter(
         user=user,
         recipe=recipe
     ).exists()
@@ -56,16 +60,18 @@ def validate_fav_cart(recipe_obj, data, cart_fav_obj, place, attrs):
     return attrs
 
 
-def get_bool_cart_fav(cart_fav_obj, data, attrs):
+def get_bool_shopping_cart_favorite(
+        shopping_cart_favorite_obj, data, attrs
+):
 
     user = data.context.get('request').user
 
     try:
-        obj = cart_fav_obj.objects.get(
+        obj = shopping_cart_favorite_obj.objects.get(
             user=user,
             recipe=attrs
         )
-    except cart_fav_obj.DoesNotExist:
+    except shopping_cart_favorite_obj.DoesNotExist:
         return False
 
     except TypeError:

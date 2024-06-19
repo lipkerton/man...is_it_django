@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from urlshortner.utils import shorten_url
 
 from .filters import CustomFilter
-from .methods import get_cart_fav, random_naming_method
+from .methods import get_shopping_cart_favorite_obj, random_naming_method
 from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
@@ -58,10 +58,10 @@ class ShopCartViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, )
 
     def get_object(self):
-        return get_cart_fav(
+        return get_shopping_cart_favorite_obj(
             recipe_obj=Recipe,
             data=self,
-            cart_fav_obj=ShoppingCart,
+            shopping_cart_favorite_obj=ShoppingCart,
             place='корзина'
         )
 
@@ -69,7 +69,7 @@ class ShopCartViewSet(viewsets.ModelViewSet):
         package = ShoppingCart.objects.filter(
             user=request.user
         )
-        filename = random_naming_method()
+        file_name = random_naming_method()
         messages = []
         for pack in package:
             message = (
@@ -82,7 +82,7 @@ class ShopCartViewSet(viewsets.ModelViewSet):
         response = HttpResponse(
             response_content, content_type='text/plain,charset=utf8'
         )
-        response['Content-Disposition'] = f'attachment; filename={filename}'
+        response['Content-Disposition'] = f'attachment; filename={file_name}'
         return response
 
 
@@ -93,9 +93,9 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorOrReadOnly, )
 
     def get_object(self):
-        return get_cart_fav(
+        return get_shopping_cart_favorite_obj(
             recipe_obj=Recipe,
             data=self,
-            cart_fav_obj=Favorite,
+            shopping_cart_favorite_obj=Favorite,
             place='избранное'
         )
