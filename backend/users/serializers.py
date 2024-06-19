@@ -3,8 +3,8 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from recipes.models import Recipe
 from rest_framework import serializers
 
-from .models import Subscription, User
 from .fields import Base64ImageField
+from .models import Subscription, User
 from .pagination import CustomPagination
 
 

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from users.serializers import CustomUserSerializer
 from users.fields import Base64ImageField
+from users.serializers import CustomUserSerializer
 from .methods import get_bool_cart_fav, validate_fav_cart
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient, RecipeTag,
                      ShoppingCart, Tag)
