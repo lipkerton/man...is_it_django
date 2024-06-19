@@ -70,11 +70,11 @@ class ShopCartViewSet(viewsets.ModelViewSet):
             user=request.user
         )
         filename = random_naming_method()
-        messages = list()
+        messages = []
         for pack in package:
             message = (
-                f'Ваша покупка - {pack.recipe.name}, ',
-                f'Время приготовления - {pack.recipe.cooking_time}.',
+                f'Ваша покупка - {pack.recipe.name}, '
+                f'Время приготовления - {pack.recipe.cooking_time}.'
                 '\n'
             )
             messages.append(message)
