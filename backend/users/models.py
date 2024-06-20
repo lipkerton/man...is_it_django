@@ -56,4 +56,9 @@ class Subscription(models.Model):
     )
 
     class Meta:
-        unique_together = [['subscriber', 'user']]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['subscriber', 'user'],
+                name='unique subscriber_user'
+            )
+        ]

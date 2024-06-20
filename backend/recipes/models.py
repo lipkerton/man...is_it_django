@@ -54,7 +54,12 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
-        unique_together = [['recipe', 'user']]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'user'],
+                name='unique recipe_user_shopping_cart'
+            )
+        ]
 
 
 class Favorite(models.Model):
@@ -73,7 +78,12 @@ class Favorite(models.Model):
     )
 
     class Meta:
-        unique_together = [['recipe', 'user']]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'user'],
+                name='unique recipe_user_favorite'
+            )
+        ]
 
 
 class RecipeIngredient(models.Model):
@@ -92,7 +102,12 @@ class RecipeIngredient(models.Model):
 
     class Meta:
         default_related_name = 'recipe_ingredient'
-        unique_together = [['recipe', 'ingredient']]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique recipe_ingredient'
+            )
+        ]
 
 
 class RecipeTag(models.Model):
@@ -102,7 +117,12 @@ class RecipeTag(models.Model):
 
     class Meta:
         default_related_name = 'recipe_tag'
-        unique_together = [['recipe', 'tag']]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'tag'],
+                name='unique recipe_tag'
+            )
+        ]
 
 
 class Recipe(models.Model):
