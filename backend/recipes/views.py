@@ -34,8 +34,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = Recipe.objects.all()
     serializer_class = RecipeCSerializer
-    permission_classes = (IsAuthorOrReadOnly, )
-    filter_backends = (DjangoFilterBackend, )
+    permission_classes = (IsAuthorOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = CustomFilter
 
     def get_link(self, request, *args, **kwargs):
