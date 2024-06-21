@@ -14,6 +14,9 @@ urlpatterns = [
     path('recipes/<int:pk>/get-link/', RecipeViewSet.as_view(
         {'get': 'get_link'}
     ), name='get_link'),
+    path('recipes/<int:pk>/edit/', RecipeViewSet.as_view(
+        {'patch': 'update'}
+    ), name='update_recipe'),
     path('recipes/<int:pk>/shopping_cart/', ShopCartViewSet.as_view(
         {'post': 'create', 'delete': 'destroy'}
     ), name='shopping_cart'),

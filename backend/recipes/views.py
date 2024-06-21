@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from urlshortner.utils import shorten_url
 
-from .filters import CustomFilter
+from .filters import RecipeFilter, IngredientFilter
 from .methods import get_shopping_cart_favorite_obj, random_naming_method
 from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .permissions import IsAuthorOrReadOnly
@@ -27,7 +27,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     pagination_class = None
     filter_backends = (DjangoFilterBackend, )
-    filterset_fields = ('name',)
+    filterset_class = IngredientFilter
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -36,7 +36,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeCSerializer
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_class = CustomFilter
+    filterset_class = RecipeFilter
 
     def get_link(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
