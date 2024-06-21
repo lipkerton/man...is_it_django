@@ -1,0 +1,39 @@
+version: '3'
+
+volumes:
+  pg_data_production:
+  static_volume:
+  media:
+
+services:
+  db:
+    image: postgres:13.10
+    env_file: .env
+    volumes:
+      - pg_data_production:/var/lib/postgresql/data
+  backend:
+    depends_on:
+      - db
+    image: lipkerton/foodgram_backend
+    env_file: .env
+    volumes:
+      - static_volume:/backend_static
+      - media:/app/media/
+  frontend:
+    image: lipkerton/foodgram_frontend
+    env_file: .env
+    command: cp -r /app/build/. /frontend_static/
+    volumes:
+      - static_volume:/frontend_static
+      - media:/app/media/
+  gateway:
+    depends_on:
+      - backend
+      - frontend
+    env_file: .env
+    image: lipkerton/foodgram_gateway
+    volumes:
+      - static_volume:/staticfiles/
+      - media:/app/media/
+    ports:
+      - 8090:90

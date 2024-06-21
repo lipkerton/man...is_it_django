@@ -8,6 +8,7 @@ from urlshortner.utils import shorten_url
 from .filters import RecipeFilter, IngredientFilter
 from .methods import get_shopping_cart_favorite_obj, random_naming_method
 from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from .pagination import CustomPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeCSerializer, ShoppingCartSerializer,
@@ -34,6 +35,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = Recipe.objects.all()
     serializer_class = RecipeCSerializer
+    pagination_class = CustomPagination
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
