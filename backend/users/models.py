@@ -18,9 +18,6 @@ class User(AbstractUser):
     last_name = models.CharField(
         max_length=150, verbose_name='фамилия'
     )
-    is_subscribed = models.BooleanField(
-        default=False, verbose_name='подписан'
-    )
     recipes_count = models.IntegerField(
         default=0, verbose_name='количество рецептов'
     )

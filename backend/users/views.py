@@ -3,12 +3,12 @@ from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Subscription, User
+from .pagination import CustomPagination
 from .serializers import (AuthTokenSerializer, AvatarSerializer,
                           CustomUserCreateSerializer, CustomUserSerializer,
                           SubscribeSerializer)
@@ -37,10 +37,17 @@ class DeleteToken(APIView):
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
 
-    queryset = Subscription.objects.all()
     serializer_class = SubscribeSerializer
     permission_classes = (IsAuthenticated, )
-    pagination_class = LimitOffsetPagination
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+
+        queryset = Subscription.objects.filter(
+            subscriber=self.request.user
+        )
+
+        return queryset
 
     def get_object(self):
 
@@ -64,6 +71,11 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
             )
 
         return subscription
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CustomUserViewSet(UserViewSet):

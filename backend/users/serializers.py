@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from .fields import Base64ImageField
 from .models import Subscription, User
-from .pagination import CustomPagination
+from .pagination import RecipeLimit
 
 
 class AvatarSerializer(serializers.ModelSerializer):
@@ -40,6 +40,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 class CustomUserSerializer(UserSerializer):
 
     avatar = Base64ImageField(required=False, allow_null=True)
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -49,6 +50,12 @@ class CustomUserSerializer(UserSerializer):
             'last_name', 'is_subscribed',
             'avatar'
         )
+
+    def get_is_subscribed(self, attrs):
+        return Subscription.objects.filter(
+            subscriber=self.context.get('request').user,
+            user=attrs
+        ).exists()
 
 
 class RecipesProfileSerializer(serializers.ModelSerializer):
@@ -65,24 +72,28 @@ class RecipesProfileSerializer(serializers.ModelSerializer):
 
 class SubscribeSerializer(serializers.ModelSerializer):
 
+    id = serializers.IntegerField(
+        source='user.id',
+        read_only=True
+    )
     email = serializers.EmailField(
-        source='subscriber.email',
+        source='user.email',
         read_only=True
     )
     username = serializers.CharField(
-        source='subscriber.username',
+        source='user.username',
         read_only=True
     )
     first_name = serializers.CharField(
-        source='subscriber.first_name',
+        source='user.first_name',
         read_only=True
     )
     last_name = serializers.CharField(
-        source='subscriber.last_name',
+        source='user.last_name',
         read_only=True
     )
     avatar = serializers.ImageField(
-        source='subscriber.avatar',
+        source='user.avatar',
         read_only=True
     )
     recipes = serializers.SerializerMethodField()
@@ -102,7 +113,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
     def get_recipes(self, attrs):
 
         recipes = Recipe.objects.filter(author=attrs.user)
-        paginator = CustomPagination()
+        paginator = RecipeLimit()
         result = paginator.paginate_queryset(
             recipes, self.context.get('request')
         )
@@ -115,7 +126,10 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return Recipe.objects.filter(author=attrs.user).count()
 
     def get_is_subscribed(self, attrs):
-        return Subscription.objects.filter(user=attrs.user).exists()
+        return Subscription.objects.filter(
+            subscriber=self.context.get('request').user,
+            user=attrs.user
+        ).exists()
 
     def create(self, validated_data):
         subscriber = self.context.get('request').user
