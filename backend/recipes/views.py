@@ -45,7 +45,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         main_part = request._request._current_scheme_host
         new_link = f'recipes/{pk}'
         mini_link = shorten_url(
-            f'{main_part}{new_link}',
+            f'{main_part}/{new_link}',
             is_permanent=False
         )
         return Response(

@@ -26,6 +26,5 @@ urlpatterns = [
     path('recipes/<int:pk>/favorite/', FavoriteViewSet.as_view(
         {'post': 'create', 'delete': 'destroy'}
     ), name='favorite'),
-    path('s/', include("urlshortner.urls")),
     path('', include(router.urls)),
 ]
