@@ -5,14 +5,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from urlshortner.utils import shorten_url
 
-from .filters import RecipeFilter, IngredientFilter
+from .filters import IngredientFilter, RecipeFilter
 from .methods import get_shopping_cart_favorite_obj, random_naming_method
-from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                     ShoppingCart, Tag)
 from .pagination import CustomPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
-                          RecipeCSerializer, ShoppingCartSerializer,
-                          TagSerializer)
+                          RecipeCSerializer, RecipeIngredientSerializer,
+                          ShoppingCartSerializer, TagSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -68,14 +69,34 @@ class ShopCartViewSet(viewsets.ModelViewSet):
         )
 
     def download(self, request):
-        package = ShoppingCart.objects.filter(
+        shopping_cart = ShoppingCart.objects.filter(
             user=request.user
         )
         file_name = random_naming_method()
         messages = []
-        for pack in package:
+        for pack in shopping_cart:
+            recipe_ingredient = RecipeIngredient.objects.filter(
+                recipe_id=pack.recipe.id
+            )
+            serializer = RecipeIngredientSerializer(
+                recipe_ingredient, many=True
+            )
+            ingredients = []
+            for ingredient in serializer.data:
+                name = ingredient.get('name')
+                measurement_unit = ingredient.get('measurement_unit')
+                amount = ingredient.get('amount')
+                ingredient_message = (
+                    f'  Ингредиент - {name} \n'
+                    f'  Мера измерения - {measurement_unit} \n'
+                    f'  Количество - {amount} \n'
+                )
+                ingredients.append(ingredient_message)
+            ingredients_content = '\n'.join(ingredients)
             message = (
-                f'Ваша покупка - {pack.recipe.name}, '
+                f'Ваша покупка - {pack.recipe.name},\n'
+                f'Ингредиенты:\n'
+                f'{ingredients_content}\n'
                 f'Время приготовления - {pack.recipe.cooking_time}.'
                 '\n'
             )
