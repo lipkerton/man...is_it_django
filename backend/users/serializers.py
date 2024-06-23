@@ -52,10 +52,12 @@ class CustomUserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, attrs):
-        return Subscription.objects.filter(
-            subscriber=self.context.get('request').user,
-            user=attrs
-        ).exists()
+        if self.context.get('request').user.is_authenticated:
+            return Subscription.objects.filter(
+                subscriber=self.context.get('request').user,
+                user=attrs
+            ).exists()
+        return False
 
 
 class RecipesProfileSerializer(serializers.ModelSerializer):
