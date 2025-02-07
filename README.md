@@ -26,6 +26,3 @@ DB_HOST=название базы данных хоста
 DB_PORT=порт для базы данных
 DEBUG=значение дебага
 ALLOWED_HOSTS=допустимые хосты
-
-# Ссылка #
-https://fooogram.myddns.me
